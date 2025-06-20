@@ -1,0 +1,15 @@
+{
+  "tutor": {
+    "Nombre": "Rafael",
+    "Apellido": "Aragón"
+  },
+  "alumno": {
+    "nombre": "Juan",
+    "apellido": "Perez",
+    "anioCarrera": "3",
+    "carrera": "Ing. Industrial",
+    "correo": "alumno@email.com",
+    "celular": "123456789",
+    "linkedin": "https://linkedin.com/in/alumno"
+  }
+}
