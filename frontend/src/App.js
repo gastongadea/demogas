@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import logo from './logo.svg';
 import './App.css';
 
 const CARRERAS = [
-  'Industrial',
-  'Informática',
-  'Biomédica',
-  'Cs. de Datos',
+  'Ing. Industrial',
+  'Ing. Informática',
+  'Ing. Biomédica',
+  'Lic. Ciencias de Datos',
 ];
 
 function App() {
@@ -84,7 +83,7 @@ function App() {
       setMensaje('Por favor, selecciona un tutor.');
       return;
     }
-    for (const campo of ['nombre','apellido','anioCarrera','carrera','correo','celular','linkedin']) {
+    for (const campo of ['nombre','apellido','anioCarrera','carrera','correo','celular']) {
       if (!form[campo]) {
         setMensaje('Por favor, completa todos los campos.');
         return;
@@ -106,7 +105,11 @@ function App() {
         setSeleccion(null);
         setForm({ nombre: '', apellido: '', anioCarrera: '', carrera: '', correo: '', celular: '', linkedin: '' });
       } else {
-        setMensaje(data.error || 'Error al seleccionar tutor.');
+        if (data.solicitudPrevia) {
+          setMensaje(`Ya tienes una solicitud de tutor registrada el ${data.solicitudPrevia.fecha} con ${data.solicitudPrevia.tutor}. No puedes solicitar otro tutor.`);
+        } else {
+          setMensaje(data.error || 'Error al seleccionar tutor.');
+        }
       }
     } catch (err) {
       setMensaje('Error de conexión con el servidor.');
@@ -195,7 +198,7 @@ function App() {
                   padding: 16,
                   background: seleccion && seleccion.Nombre === t.Nombre && seleccion.Apellido === t.Apellido ? '#e0f7fa' : '#fff',
                   boxShadow: '0 2px 8px #0001',
-                  opacity: t['Cantidad de asesorados'] === '0' ? 0.5 : 1
+                  opacity: t['Cupo disponible'] <= 0 ? 0.5 : 1
                 }}>
                   {t.Foto && (
                     <div style={{ textAlign: 'center', marginBottom: 10 }}>
@@ -224,11 +227,11 @@ function App() {
                   <div><b>Edad:</b> {t.Edad || '-'} años</div>
                   <div><b>Empresa:</b> {t.Empresa || '-'}</div>
                   <div><b>Cargo:</b> {t.Cargo || '-'}</div>
-                  <div><b>Cupo:</b> {t['Cantidad de asesorados']}</div>
+                  <div><b>Cupo disponible:</b> {t['Cupo disponible'] || '0'}</div>
                   <button
                     style={{ marginTop: 10 }}
                     onClick={() => handleSelectTutor(t)}
-                    disabled={t['Cantidad de asesorados'] === '0'}
+                    disabled={t['Cupo disponible'] <= 0}
                   >
                     Seleccionar
                   </button>
@@ -273,7 +276,7 @@ function App() {
                 </label>
               </div>
               <div>
-                <label>Linkedin (opcional):<br/>
+                <label>LinkedIn (opcional):<br/>
                   <input name="linkedin" value={form.linkedin} onChange={handleChange} />
                 </label>
               </div>
