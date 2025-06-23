@@ -220,14 +220,12 @@ function App() {
                       />
                     </div>
                   )}
-                  <div><b>Nombre:</b> {t.Nombre}</div>
-                  <div><b>Apellido:</b> {t.Apellido}</div>
-                  <div><b>Carrera:</b> {t.Carrera || '-'}</div>
-                  <div><b>Graduación:</b> {t.Graduación}</div>
-                  <div><b>Edad:</b> {t.Edad || '-'} años</div>
-                  <div><b>Empresa:</b> {t.Empresa || '-'}</div>
-                  <div><b>Cargo:</b> {t.Cargo || '-'}</div>
-                  <div><b>Cupo disponible:</b> {t['Cupo disponible'] || '0'}</div>
+                  <div style={{ fontWeight: 'bold', fontSize: '16px', marginBottom: '8px' }}>
+                    {t.Nombre} {t.Apellido} <span style={{ fontWeight: 'normal' }}>({t.Edad || '-'} años)</span>
+                  </div>
+                  <div style={{ marginBottom: '4px' }}>{t.Carrera || '-'} ({t.Graduación})</div>
+                  {t.Cargo && <div style={{ marginBottom: '4px' }}><strong>Cargo:</strong> {t.Cargo}</div>}
+                  {t.Empresa && <div style={{ marginBottom: '4px' }}><strong>Empresa:</strong> {t.Empresa}</div>}
                   <button
                     style={{ marginTop: 10 }}
                     onClick={() => handleSelectTutor(t)}
