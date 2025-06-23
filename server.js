@@ -118,7 +118,7 @@ async function enviarCorreoSeleccion(tutor, alumno) {
     from: 'Graduados FI Austral <graduadosfi@ing.austral.edu.ar>',
     to: `${tutor.Mail}, ${alumno.correo}`,
     subject: '¡Conexión realizada! Mentoría FI Austral',
-    text: `¡Hola! Se ha realizado una conexión alumno - graduado del Programa de Mentorías de alumnos.\n\nDatos del Alumno:\n- Nombre: ${alumno.nombre}\n- Apellido: ${alumno.apellido}\n- Carrera: ${alumno.carrera}\n- Año en la carrera: ${alumno.anioCarrera}\n- Celular: ${alumno.celular}\n${linkedinAlumno}\nDatos del Graduado:\n- Nombre: ${tutor.Nombre}\n- Apellido: ${tutor.Apellido}\n- Carrera: ${tutor.Carrera}\n\nLos animamos a ponerse en contacto para coordinar su primer encuentro.\nSaludos cordiales!\nDepartamento de Graduados de la Facultad de Ingeniería\nUniversidad Austral`
+    text: `¡Hola! Se ha realizado una conexión alumno - graduado del Programa de Mentorías de alumnos.\n\nALUMNO\n- ${alumno.nombre} ${alumno.apellido}\n- Carrera: ${alumno.carrera}\n- Año: ${alumno.anioCarrera}º\n- Celular: ${alumno.celular}\n${linkedinAlumno}\n\nGRADUADO: ${tutor.Nombre} ${tutor.Apellido}\n- Título: ${tutor.Carrera}\n\nLos animamos a ponerse en contacto para coordinar su primer encuentro.\n\nSaludos cordiales!\n\nDepartamento de Graduados de la Facultad de Ingeniería\nUniversidad Austral`
   };
   await transporter.sendMail(mailOptions);
 }
