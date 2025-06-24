@@ -238,6 +238,7 @@ function App() {
                   <div style={{ marginBottom: '4px' }}>{t.Carrera || '-'} ({t.Graduación})</div>
                   {t.Cargo && <div style={{ marginBottom: '4px' }}><strong>Cargo:</strong> {t.Cargo}</div>}
                   {t.Empresa && <div style={{ marginBottom: '4px' }}><strong>Empresa:</strong> {t.Empresa}</div>}
+                  {t.Lugar && <div style={{ marginBottom: '4px' }}><strong>Lugar:</strong> {t.Lugar}</div>}
                   <button
                     style={{ marginTop: 10 }}
                     onClick={() => handleSelectTutor(t)}

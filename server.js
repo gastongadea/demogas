@@ -1,4 +1,6 @@
 require('dotenv').config();
+//console.log('GOOGLE_CREDENTIALS:', process.env.GOOGLE_CREDENTIALS ? 'OK' : 'NO SET');
+//console.log('PRUEBA:', process.env.PRUEBA);
 const express = require('express');
 const cors = require('cors');
 const { google } = require('googleapis');
