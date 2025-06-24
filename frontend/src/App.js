@@ -118,6 +118,17 @@ function App() {
 
   return (
     <div style={{ maxWidth: 900, margin: 'auto', padding: 20 }}>
+      <div style={{ textAlign: 'center', marginBottom: 30 }}>
+        <img 
+          src="/logoFIhorizontal.png" 
+          alt="Logo Facultad de Ingeniería - Universidad Austral"
+          style={{ 
+            maxWidth: '300px', 
+            height: 'auto',
+            marginBottom: '5px'
+          }}
+        />
+      </div>
       <h1>Seleccioná tu Graduado-Mentor</h1>
       <p style={{ color: '#666', marginBottom: 20 }}>Haciendo click en la foto, verás su perfil de LinkedIn</p>
       {loading && <p>Cargando tutores...</p>}
