@@ -46,7 +46,8 @@ Aplicación web para que los estudiantes puedan seleccionar tutores (graduados-m
    ```
 
 4. **Configurar credenciales de Google Sheets**
-   - Coloca tu archivo `credentials.json` en la raíz del proyecto
+   - Crea un archivo `.env` en la raíz del proyecto
+   - Agrega la variable `GOOGLE_CREDENTIALS` con el contenido completo del JSON de credenciales
    - Comparte tu hoja de Google Sheets con el email del service account
 
 5. **Ejecutar el backend**
@@ -65,7 +66,6 @@ Aplicación web para que los estudiantes puedan seleccionar tutores (graduados-m
 ```
 demogas/
 ├── server.js              # Backend (Node.js + Express)
-├── credentials.json       # Credenciales de Google Sheets (no subir a Git)
 ├── package.json           # Dependencias del backend
 ├── .gitignore            # Archivos a ignorar
 ├── README.md             # Este archivo
@@ -76,14 +76,39 @@ demogas/
     └── public/
 ```
 
+**Nota**: Las credenciales de Google Sheets se manejan a través de variables de entorno por seguridad.
+
 ## Variables de entorno
 
+### Desarrollo local
 Crea un archivo `.env` en la raíz del proyecto:
 
 ```env
 SPREADSHEET_ID=tu_id_de_google_sheets
 PORT=3001
 ```
+
+### Despliegue en Railway
+
+Para desplegar en Railway, necesitas configurar las siguientes variables de entorno:
+
+1. **GOOGLE_CREDENTIALS**: El contenido completo del archivo JSON de credenciales de Google Sheets API
+   - Ve a Google Cloud Console
+   - Crea un Service Account
+   - Descarga el archivo JSON de credenciales
+   - Copia todo el contenido del archivo JSON
+   - Pégalo como valor de la variable `GOOGLE_CREDENTIALS` en Railway
+
+2. **PORT**: Puerto del servidor (Railway lo configura automáticamente)
+
+### Cómo configurar las variables en Railway:
+
+1. Ve a tu proyecto en Railway
+2. Haz clic en la pestaña "Variables"
+3. Agrega la variable `GOOGLE_CREDENTIALS` con el contenido completo del JSON de credenciales
+4. Guarda los cambios
+
+**Importante**: El archivo `credentials.json` ya no es necesario. Las credenciales se manejan a través de variables de entorno por seguridad.
 
 ## Despliegue
 

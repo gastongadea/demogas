@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const { google } = require('googleapis');
-const credentials = require('./credentials.json');
 const nodemailer = require('nodemailer');
 
 const SPREADSHEET_ID = '1LREjud109bwtC3nOSM2lUpb6eWXoSqHrFL5YyHr4fec';
@@ -23,7 +22,17 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+// Función para obtener las credenciales desde variables de entorno
+function getCredentials() {
+  const credentialsJson = process.env.GOOGLE_CREDENTIALS;
+  if (!credentialsJson) {
+    throw new Error('GOOGLE_CREDENTIALS environment variable is not set');
+  }
+  return JSON.parse(credentialsJson);
+}
+
 async function getTutores() {
+  const credentials = getCredentials();
   const auth = new google.auth.GoogleAuth({
     credentials,
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
@@ -77,6 +86,7 @@ app.get('/tutores', async (req, res) => {
  */
 async function verificarSolicitudPrevia(alumno) {
   try {
+    const credentials = getCredentials();
     const auth = new google.auth.GoogleAuth({
       credentials,
       scopes: ['https://www.googleapis.com/auth/spreadsheets'],
@@ -150,7 +160,7 @@ app.post('/seleccionar-tutor', async (req, res) => {
 
     // 2. Leer tutores
     const auth = new google.auth.GoogleAuth({
-      credentials,
+      credentials: getCredentials(),
       scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
     const sheets = google.sheets({ version: 'v4', auth });
