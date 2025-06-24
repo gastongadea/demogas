@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { google } = require('googleapis');
@@ -124,11 +125,19 @@ async function enviarCorreoSeleccion(tutor, alumno) {
   if (alumno.linkedin && alumno.linkedin.trim() !== '') {
     linkedinAlumno = `- LinkedIn: ${alumno.linkedin}\n`;
   }
+  
+  // Determinar el género para personalizar el texto
+  const esAlumna = alumno.sexo === 'Mujer';
+  const esGraduada = tutor.Sexo === 'Mujer';
+  
+  const textoAlumno = esAlumna ? 'ALUMNA' : 'ALUMNO';
+  const textoGraduado = esGraduada ? 'GRADUADA' : 'GRADUADO';
+  
   const mailOptions = {
     from: 'Graduados FI Austral <graduadosfi@ing.austral.edu.ar>',
     to: `${tutor.Mail}, ${alumno.correo}`,
     subject: '¡Conexión realizada! Mentoría FI Austral',
-    text: `¡Hola! Se ha realizado una conexión alumno - graduado del Programa de Mentorías de alumnos.\n\nALUMNO\n- ${alumno.nombre} ${alumno.apellido}\n- Carrera: ${alumno.carrera}\n- Año: ${alumno.anioCarrera}º\n- Celular: ${alumno.celular}\n${linkedinAlumno}\n\nGRADUADO: ${tutor.Nombre} ${tutor.Apellido}\n- Título: ${tutor.Carrera}\n\nLos animamos a ponerse en contacto para coordinar su primer encuentro.\n\nSaludos cordiales!\n\nDepartamento de Graduados de la Facultad de Ingeniería\nUniversidad Austral`
+    text: `¡Hola! Se ha realizado una conexión alumno - graduado del Programa de Mentorías de alumnos.\n\n${textoAlumno}: ${alumno.nombre} ${alumno.apellido}\n- Carrera: ${alumno.carrera}\n- Año: ${alumno.anioCarrera}º\n- Celular: ${alumno.celular}\n${linkedinAlumno}\n\n${textoGraduado}: ${tutor.Nombre} ${tutor.Apellido}\n- Título: ${tutor.Carrera}\n- Contacto: ${tutor.Mail}\n\nLos animamos a ponerse en contacto para coordinar su primer encuentro.\n\nSaludos cordiales!\n\nDepartamento de Graduados de la Facultad de Ingeniería\nUniversidad Austral`
   };
   await transporter.sendMail(mailOptions);
 }
@@ -222,7 +231,8 @@ app.post('/seleccionar-tutor', async (req, res) => {
       Mail: rows[idx][8] || '',
       Celular: rows[idx][7] || '',
       Carrera: rows[idx][6] || '',
-      Linkedin: rows[idx][13] || ''
+      Linkedin: rows[idx][13] || '',
+      Sexo: rows[idx][3] || '' // Columna D (índice 3) - Sexo
     };
     try {
       await enviarCorreoSeleccion(tutorCompleto, alumno);

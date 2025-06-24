@@ -21,6 +21,7 @@ function App() {
     correo: '',
     celular: '',
     linkedin: '',
+    sexo: '',
   });
   const [mensaje, setMensaje] = useState('');
   
@@ -83,7 +84,7 @@ function App() {
       setMensaje('Por favor, selecciona un tutor.');
       return;
     }
-    for (const campo of ['nombre','apellido','anioCarrera','carrera','correo','celular']) {
+    for (const campo of ['nombre','apellido','anioCarrera','carrera','correo','celular','sexo']) {
       if (!form[campo]) {
         setMensaje('Por favor, completa todos los campos.');
         return;
@@ -103,7 +104,7 @@ function App() {
       if (data.ok) {
         setMensaje('¡Selección exitosa! El tutor recibirá tus datos.');
         setSeleccion(null);
-        setForm({ nombre: '', apellido: '', anioCarrera: '', carrera: '', correo: '', celular: '', linkedin: '' });
+        setForm({ nombre: '', apellido: '', anioCarrera: '', carrera: '', correo: '', celular: '', linkedin: '', sexo: '' });
       } else {
         if (data.solicitudPrevia) {
           setMensaje(`Ya tienes una solicitud de tutor registrada el ${data.solicitudPrevia.fecha} con ${data.solicitudPrevia.tutor}. No puedes solicitar otro tutor.`);
@@ -282,6 +283,15 @@ function App() {
               <div>
                 <label>Celular:<br/>
                   <input name="celular" value={form.celular} onChange={handleChange} />
+                </label>
+              </div>
+              <div>
+                <label>Sexo:<br/>
+                  <select name="sexo" value={form.sexo} onChange={handleChange}>
+                    <option value="">Seleccionar</option>
+                    <option value="Varón">Varón</option>
+                    <option value="Mujer">Mujer</option>
+                  </select>
                 </label>
               </div>
               <div>
