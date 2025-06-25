@@ -107,3 +107,16 @@
     top: auto;
   }
 }
+
+/* Grilla de tutores: 2 columnas por defecto */
+.tutores-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 700px) {
+  .tutores-grid {
+    grid-template-columns: 1fr;
+  }
+}

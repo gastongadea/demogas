@@ -200,11 +200,7 @@ function App() {
               </div>
             </div>
             {/* Lista de tutores */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: 16
-            }}>
+            <div className="tutores-grid">
               {tutoresFiltrados.length === 0 && <p style={{gridColumn: '1 / -1'}}>No hay tutores que coincidan con los filtros.</p>}
               {tutoresFiltrados.map((tutor, idx) => (
                 <div
