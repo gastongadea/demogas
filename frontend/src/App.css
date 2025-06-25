@@ -85,3 +85,25 @@
   margin-top: 12px;
   cursor: pointer;
 }
+
+@media (max-width: 900px) {
+  .main-layout {
+    flex-direction: column;
+    height: auto;
+  }
+  .tutores-list, .alumno-form {
+    flex: none;
+    width: 100%;
+    height: auto;
+    padding: 20px 8px;
+    border-right: none;
+    box-sizing: border-box;
+  }
+  .tutores-list {
+    margin-bottom: 24px;
+  }
+  .alumno-form {
+    position: static;
+    top: auto;
+  }
+}
