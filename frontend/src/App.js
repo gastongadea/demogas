@@ -61,7 +61,11 @@ function App() {
   });
 
   const handleSelectTutor = (tutor) => {
-    setSeleccion(tutor);
+    if (seleccion && seleccion.Nombre === tutor.Nombre && seleccion.Apellido === tutor.Apellido) {
+      setSeleccion(null);
+    } else {
+      setSeleccion(tutor);
+    }
     setMensaje('');
   };
 
@@ -118,27 +122,25 @@ function App() {
   };
 
   return (
-    <div style={{ maxWidth: 900, margin: 'auto', padding: 20 }}>
-      <div style={{ textAlign: 'center', marginBottom: 30 }}>
-        <img 
-          src="/logoFIhorizontal.png" 
-          alt="Logo Facultad de Ingeniería - Universidad Austral"
-          style={{ 
-            maxWidth: '300px', 
-            height: 'auto',
-            marginBottom: '5px'
-          }}
-        />
-      </div>
-      <h1>Seleccioná tu Graduado-Mentor</h1>
-      <p style={{ color: '#666', marginBottom: 20 }}>Haciendo click en la foto, verás su perfil de LinkedIn</p>
-      {loading && <p>Cargando tutores...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {!loading && !error && (
-        <div style={{ display: 'flex', gap: 40 }}>
-          <div style={{ flex: 2 }}>
-            <h2>Lista de tutores</h2>
-            
+    <div className="main-layout">
+      <div className="tutores-list">
+        <div style={{ textAlign: 'center', marginBottom: 30 }}>
+          <img 
+            src="/logoFIhorizontal.png" 
+            alt="Logo Facultad de Ingeniería - Universidad Austral"
+            style={{ 
+              maxWidth: '300px', 
+              height: 'auto',
+              marginBottom: '5px'
+            }}
+          />
+        </div>
+        <h1>Seleccioná tu Graduado-Mentor</h1>
+        <p style={{ color: '#666', marginBottom: 20 }}>Haciendo click en la foto, verás su perfil de LinkedIn</p>
+        {loading && <p>Cargando tutores...</p>}
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+        {!loading && !error && (
+          <>
             {/* Filtros */}
             <div style={{ 
               background: '#f5f5f5', 
@@ -197,123 +199,79 @@ function App() {
                 </button>
               </div>
             </div>
-
-            <div style={{ marginBottom: 10 }}>
-              <strong>Tutores encontrados: {tutoresFiltrados.length}</strong>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
-              {tutoresFiltrados.map((t, i) => (
-                <div key={i} style={{
-                  border: '1px solid #ccc',
-                  borderRadius: 8,
-                  padding: 16,
-                  background: seleccion && seleccion.Nombre === t.Nombre && seleccion.Apellido === t.Apellido ? '#e0f7fa' : '#fff',
-                  boxShadow: '0 2px 8px #0001',
-                  opacity: t['Cupo disponible'] <= 0 ? 0.5 : 1
-                }}>
-                  {t.Foto && (
-                    <div style={{ textAlign: 'center', marginBottom: 10 }}>
-                      <img 
-                        src={t.Foto} 
-                        alt={`${t.Nombre} ${t.Apellido}`}
-                        style={{ 
-                          width: 80, 
-                          height: 80, 
-                          borderRadius: '50%', 
-                          objectFit: 'cover',
-                          border: '2px solid #ddd',
-                          cursor: t.Linkedin ? 'pointer' : 'default'
-                        }}
-                        onClick={() => t.Linkedin && window.open(t.Linkedin, '_blank')}
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                        }}
-                      />
-                    </div>
-                  )}
-                  <div style={{ fontWeight: 'bold', fontSize: '16px', marginBottom: '8px' }}>
-                    {t.Nombre} {t.Apellido} <span style={{ fontWeight: 'normal' }}>({t.Edad || '-'} años)</span>
+            {/* Lista de tutores */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 16
+            }}>
+              {tutoresFiltrados.length === 0 && <p style={{gridColumn: '1 / -1'}}>No hay tutores que coincidan con los filtros.</p>}
+              {tutoresFiltrados.map((tutor, idx) => (
+                <div
+                  key={idx}
+                  className={`tutor-card${seleccion && seleccion.Nombre === tutor.Nombre && seleccion.Apellido === tutor.Apellido ? ' seleccionado' : ''}`}
+                  onClick={() => handleSelectTutor(tutor)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 16,
+                    background: '#fff',
+                    border: '1px solid #ddd',
+                    borderRadius: 8,
+                    marginBottom: 0,
+                    padding: 12,
+                    cursor: 'pointer',
+                    boxShadow: seleccion && seleccion.Nombre === tutor.Nombre && seleccion.Apellido === tutor.Apellido ? '0 0 0 2px #1976d2' : 'none',
+                  }}
+                >
+                  <a href={tutor.Linkedin} target="_blank" rel="noopener noreferrer">
+                    <img
+                      src={tutor.Foto || '/logo192.png'}
+                      alt={tutor.Nombre}
+                      style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '2px solid #1976d2' }}
+                    />
+                  </a>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 'bold', fontSize: 18 }}>{tutor.Nombre} {tutor.Apellido}</div>
+                    <div style={{ color: '#555' }}>{tutor.Carrera}</div>
+                    <div style={{ color: '#888', fontSize: 13 }}>Graduación: {tutor.Graduación}</div>
+                    {tutor.Cargo && <div style={{ color: '#888', fontSize: 13 }}>Cargo: {tutor.Cargo}</div>}
+                    {tutor.Empresa && <div style={{ color: '#888', fontSize: 13 }}>Empresa: {tutor.Empresa}</div>}
+                    {tutor.Lugar && <div style={{ color: '#888', fontSize: 13 }}>Lugar: {tutor.Lugar}</div>}
                   </div>
-                  <div style={{ marginBottom: '4px' }}>{t.Carrera || '-'} ({t.Graduación})</div>
-                  {t.Cargo && <div style={{ marginBottom: '4px' }}><strong>Cargo:</strong> {t.Cargo}</div>}
-                  {t.Empresa && <div style={{ marginBottom: '4px' }}><strong>Empresa:</strong> {t.Empresa}</div>}
-                  {t.Lugar && <div style={{ marginBottom: '4px' }}><strong>Lugar:</strong> {t.Lugar}</div>}
-                  <button
-                    style={{ marginTop: 10 }}
-                    onClick={() => handleSelectTutor(t)}
-                    disabled={t['Cupo disponible'] <= 0}
-                  >
-                    Seleccionar
-                  </button>
                 </div>
               ))}
             </div>
+          </>
+        )}
+      </div>
+      <div className="alumno-form">
+        <h2>Datos del Alumno</h2>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <input name="nombre" value={form.nombre} onChange={handleChange} placeholder="Nombre" />
+          <input name="apellido" value={form.apellido} onChange={handleChange} placeholder="Apellido" />
+          <input name="anioCarrera" value={form.anioCarrera} onChange={handleChange} placeholder="Año de la carrera" type="number" min="1" max="7" />
+          <select name="carrera" value={form.carrera} onChange={handleChange}>
+            <option value="">Seleccioná tu carrera</option>
+            {CARRERAS.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <input name="correo" value={form.correo} onChange={handleChange} placeholder="Correo electrónico" type="email" />
+          <input name="celular" value={form.celular} onChange={handleChange} placeholder="Celular" />
+          <input name="linkedin" value={form.linkedin} onChange={handleChange} placeholder="LinkedIn (opcional)" />
+          <select name="sexo" value={form.sexo} onChange={handleChange}>
+            <option value="">Sexo</option>
+            <option value="Varón">Varón</option>
+            <option value="Mujer">Mujer</option>
+          </select>
+          <button type="submit" style={{ padding: '10px 0', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 'bold', fontSize: 16 }}>Enviar solicitud</button>
+        </form>
+        {seleccion && (
+          <div style={{ marginTop: 16, background: '#e3f2fd', padding: 10, borderRadius: 8, color: '#1976d2', fontWeight: 'bold', textAlign: 'center' }}>
+            Tutor seleccionado: {seleccion.Nombre} {seleccion.Apellido}
           </div>
-          <div style={{ flex: 1 }}>
-            <h2>Datos del alumno</h2>
-            <form onSubmit={handleSubmit}>
-              <div>
-                <label>Nombre:<br/>
-                  <input name="nombre" value={form.nombre} onChange={handleChange} />
-                </label>
-              </div>
-              <div>
-                <label>Apellido:<br/>
-                  <input name="apellido" value={form.apellido} onChange={handleChange} />
-                </label>
-              </div>
-              <div>
-                <label>Año en la carrera:<br/>
-                  <input name="anioCarrera" value={form.anioCarrera} onChange={handleChange} type="number" min="3" max="5" />
-                </label>
-              </div>
-              <div>
-                <label>Carrera:<br/>
-                  <select name="carrera" value={form.carrera} onChange={handleChange}>
-                    <option value="">Seleccionar</option>
-                    {CARRERAS.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </label>
-              </div>
-              <div>
-                <label>Correo:<br/>
-                  <input name="correo" value={form.correo} onChange={handleChange} type="email" />
-                </label>
-              </div>
-              <div>
-                <label>Celular:<br/>
-                  <input name="celular" value={form.celular} onChange={handleChange} />
-                </label>
-              </div>
-              <div>
-                <label>Sexo:<br/>
-                  <select name="sexo" value={form.sexo} onChange={handleChange}>
-                    <option value="">Seleccionar</option>
-                    <option value="Varón">Varón</option>
-                    <option value="Mujer">Mujer</option>
-                  </select>
-                </label>
-              </div>
-              <div>
-                <label>LinkedIn (opcional):<br/>
-                  <input name="linkedin" value={form.linkedin} onChange={handleChange} />
-                </label>
-              </div>
-              <div style={{ marginTop: 10 }}>
-                <button type="submit">Enviar solicitud</button>
-              </div>
-              {mensaje && <p style={{ color: mensaje.startsWith('¡') ? 'green' : 'red' }}>{mensaje}</p>}
-            </form>
-            {seleccion && (
-              <div style={{ marginTop: 20, background: '#f1f8e9', padding: 10, borderRadius: 8 }}>
-                <b>Tutor seleccionado:</b><br/>
-                {seleccion.Nombre} {seleccion.Apellido}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+        )}
+        {mensaje && <div style={{ marginTop: 16, color: mensaje.includes('¡Selección exitosa!') ? 'green' : 'red' }}>{mensaje}</div>}
+      </div>
     </div>
   );
 }

@@ -36,3 +36,52 @@
     transform: rotate(360deg);
   }
 }
+
+/* Layout principal de dos columnas */
+.main-layout {
+  display: flex;
+  height: 100vh;
+  background: #f7f7f7;
+}
+
+.tutores-list {
+  flex: 2;
+  overflow-y: auto;
+  height: 100vh;
+  padding: 32px 24px 32px 24px;
+  border-right: 1px solid #e0e0e0;
+  box-sizing: border-box;
+}
+
+.alumno-form {
+  flex: 1;
+  padding: 32px 24px;
+  background: #fff;
+  height: 100vh;
+  box-sizing: border-box;
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+/* Opcional: resalta el tutor seleccionado */
+.tutor-card.seleccionado {
+  border: 2px solid #1976d2 !important;
+  background: #e3f2fd !important;
+}
+
+/* Ajustes para inputs y formularios */
+.alumno-form input,
+.alumno-form select {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.alumno-form button {
+  margin-top: 12px;
+  cursor: pointer;
+}
