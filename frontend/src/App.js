@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import './App.css';
 
 const CARRERAS = [
@@ -33,6 +33,8 @@ function App() {
     anioMax: ''
   });
 
+  const alumnoFormRef = useRef(null);
+
   useEffect(() => {
     const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
     fetch(`${backendUrl}/tutores`)
@@ -65,6 +67,11 @@ function App() {
       setSeleccion(null);
     } else {
       setSeleccion(tutor);
+      setTimeout(() => {
+        if (alumnoFormRef.current) {
+          alumnoFormRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
     }
     setMensaje('');
   };
@@ -241,7 +248,7 @@ function App() {
           </>
         )}
       </div>
-      <div className="alumno-form">
+      <div className="alumno-form" ref={alumnoFormRef}>
         <h2>Datos del Alumno</h2>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <input name="nombre" value={form.nombre} onChange={handleChange} placeholder="Nombre" />
