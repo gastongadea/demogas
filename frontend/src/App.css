@@ -86,7 +86,7 @@
   cursor: pointer;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 700px) {
   .main-layout {
     flex-direction: column;
     height: auto;
@@ -105,6 +105,34 @@
   .alumno-form {
     position: static;
     top: auto;
+    height: auto;
+  }
+}
+
+@media (min-width: 701px) {
+  .main-layout {
+    flex-direction: row;
+    height: 100vh;
+  }
+  .alumno-form {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    background: #fff;
+    flex: 1;
+    padding: 32px 24px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+  .tutores-list {
+    flex: 2;
+    overflow-y: auto;
+    height: 100vh;
+    padding: 32px 24px 32px 24px;
+    border-right: 1px solid #e0e0e0;
+    box-sizing: border-box;
   }
 }
 
