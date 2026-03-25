@@ -14,6 +14,9 @@ yarn-error.log*
 # Google Sheets credentials
 credentials.json
 
+# Backup env files (never commit)
+.env.bak
+
 # Build files
 frontend/build/
 frontend/dist/

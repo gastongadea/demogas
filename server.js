@@ -34,6 +34,38 @@ function getCredentials() {
   return JSON.parse(credentialsJson);
 }
 
+/**
+ * Extrae el fileId de un link de Google Drive (o si pegaron solo el id).
+ * Formatos típicos: /file/d/ID/, open?id=ID, uc?export=view&id=ID
+ */
+function extractGoogleDriveFileId(input) {
+  if (!input || typeof input !== 'string') return null;
+  const s = input.trim();
+  if (!s) return null;
+
+  const fromPath = s.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (fromPath) return fromPath[1];
+
+  if (/drive\.google\.com|docs\.google\.com/.test(s)) {
+    const fromQuery = s.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (fromQuery) return fromQuery[1];
+  }
+
+  if (/^[a-zA-Z0-9_-]{25,}$/.test(s) && !s.includes('://')) return s;
+
+  return null;
+}
+
+/** URL estable para usar en <img src>.
+ * Nota: para Drive, `thumbnail` suele devolver mejor una respuesta “imagen directa” para `<img>`.
+ * El archivo igualmente debe estar compartido “Cualquiera con el enlace”.
+ */
+function normalizeDrivePhotoUrl(raw) {
+  const id = extractGoogleDriveFileId(raw);
+  if (id) return `https://drive.google.com/thumbnail?id=${id}&sz=w128`;
+  return typeof raw === 'string' ? raw.trim() : '';
+}
+
 async function getTutores() {
   const credentials = getCredentials();
   const auth = new google.auth.GoogleAuth({
@@ -57,6 +89,10 @@ async function getTutores() {
       HEADERS.forEach((key, i) => {
         if (key !== 'DNI') obj[key] = row[i] || '';
       });
+
+      if (obj['Foto']) {
+        obj['Foto'] = normalizeDrivePhotoUrl(obj['Foto']);
+      }
       
       // Calcular cupo disponible
       const cupoMaximo = parseInt(obj['Cupo']) || 0;
@@ -72,6 +108,20 @@ async function getTutores() {
   console.log('Tutores con cupo disponible:', tutores.length);
   return tutores;
 }
+
+app.get('/', (req, res) => {
+  res.type('html').send(`<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><title>API mentorías</title></head>
+<body>
+  <p>Backend en marcha. Este servidor no sirve una página en <code>/</code>; usá los endpoints:</p>
+  <ul>
+    <li><a href="/tutores"><code>GET /tutores</code></a> — lista de mentores (JSON)</li>
+    <li><code>POST /seleccionar-tutor</code> — cuerpo JSON (desde el front)</li>
+  </ul>
+</body>
+</html>`);
+});
 
 app.get('/tutores', async (req, res) => {
   try {
@@ -135,9 +185,12 @@ async function enviarCorreoSeleccion(tutor, alumno) {
   const textoAlumno = esAlumna ? 'ALUMNA' : 'ALUMNO';
   const textoGraduado = esGraduada ? 'GRADUADA' : 'GRADUADO';
   
+  // Limpiar correo del tutor por si contiene un teléfono separado por '|'
+  const mentorEmail = (tutor.Mail || '').split('|')[0].trim();
+
   const mailOptions = {
     from: 'Graduados FI Austral <graduadosfi@ing.austral.edu.ar>',
-    to: `${tutor.Mail}, ${alumno.correo}`,
+    to: `${mentorEmail}, ${alumno.correo}`,
     bcc: 'gaston.gadea@ing.austral.edu.ar',
     subject: '¡Conexión realizada! Mentoría FI Austral',
     text: `¡Hola! Se ha realizado una conexión alumno - graduado del Programa de Mentorías de alumnos.\n\n${textoAlumno}: ${alumno.nombre} ${alumno.apellido}\n- Carrera: ${alumno.carrera}\n- Año: ${alumno.anioCarrera}º\n- Celular: ${alumno.celular}\n${linkedinAlumno}\n\n${textoGraduado}: ${tutor.Nombre} ${tutor.Apellido}\n- Título: ${tutor.Carrera}\n- Contacto: ${tutor.Mail}\n\nLos animamos a ponerse en contacto para coordinar su primer encuentro.\n\nSaludos cordiales!\n\nDepartamento de Graduados de la Facultad de Ingeniería\nUniversidad Austral`

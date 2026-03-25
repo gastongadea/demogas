@@ -1,6 +1,43 @@
 import React, { useEffect, useState, useRef } from 'react';
 import './App.css';
 
+/** Sin REACT_APP_BACKEND_URL, usamos el backend directo (evita el proxy de CRA, que a veces devuelve index.html en /tutores). */
+function getApiBase() {
+  const fromEnv = process.env.REACT_APP_BACKEND_URL;
+  if (fromEnv) return fromEnv.replace(/\/$/, '');
+  return 'http://localhost:3001';
+}
+
+/**
+ * Drive links que llegan desde el backend (o pegados en la planilla) a un formato
+ * que suele funcionar mejor para `<img>`.
+ */
+function normalizeDrivePhotoUrlClient(raw) {
+  if (!raw || typeof raw !== 'string') return '';
+  const s = raw.trim();
+  if (!s) return '';
+
+  // Si ya viene como thumbnail, lo dejamos igual.
+  if (s.includes('drive.google.com/thumbnail')) return s;
+
+  const fromPath = s.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (fromPath) {
+    return `https://drive.google.com/thumbnail?id=${fromPath[1]}&sz=w128`;
+  }
+
+  const fromUcQuery = s.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (fromUcQuery) {
+    return `https://drive.google.com/thumbnail?id=${fromUcQuery[1]}&sz=w128`;
+  }
+
+  // Si pusieron solo el id.
+  if (/^[a-zA-Z0-9_-]{25,}$/.test(s) && !s.includes('://')) {
+    return `https://drive.google.com/thumbnail?id=${s}&sz=w128`;
+  }
+
+  return s;
+}
+
 const CARRERAS = [
   'Ing. Industrial',
   'Ing. Informática',
@@ -36,19 +73,36 @@ function App() {
   const alumnoFormRef = useRef(null);
 
   useEffect(() => {
-    const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
-    fetch(`${backendUrl}/tutores`)
-      .then(res => res.json())
-      .then(data => {
+    const base = getApiBase();
+    fetch(`${base}/tutores`)
+      .then(async (res) => {
+        const text = await res.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          const looksLikeHtml = text.trimStart().startsWith('<');
+          throw new Error(
+            looksLikeHtml
+              ? 'La respuesta fue HTML (no JSON). Suele pasar si el front pide /tutores al dev server de React en lugar del backend. Usá el backend en http://localhost:3001 (ya configurado).'
+              : 'El servidor no devolvió JSON. ¿Está el backend corriendo? (npm start en la raíz del repo, puerto 3001).'
+          );
+        }
+        if (!res.ok) {
+          const msg = data.details || data.error || `Error ${res.status}`;
+          throw new Error(msg);
+        }
+        if (!Array.isArray(data)) {
+          throw new Error('El servidor no devolvió una lista de tutores.');
+        }
         setTutores(data);
         setLoading(false);
-        // Log para depurar los valores de carrera y sexo
         console.log('Tutores cargados:', data);
-        console.log('Valores únicos de Carrera:', [...new Set(data.map(t => t.Carrera))]);
-        console.log('Valores únicos de Sexo:', [...new Set(data.map(t => t.Sexo))]);
+        console.log('Valores únicos de Carrera:', [...new Set(data.map((t) => t.Carrera))]);
+        console.log('Valores únicos de Sexo:', [...new Set(data.map((t) => t.Sexo))]);
       })
-      .catch(() => {
-        setError('No se pudo cargar la lista de tutores');
+      .catch((err) => {
+        setError(err.message || 'No se pudo cargar la lista de tutores');
         setLoading(false);
       });
   }, []);
@@ -102,8 +156,8 @@ function App() {
       }
     }
     try {
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
-      const res = await fetch(`${backendUrl}/seleccionar-tutor`, {
+      const base = getApiBase();
+      const res = await fetch(`${base}/seleccionar-tutor`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -229,8 +283,41 @@ function App() {
                 >
                   <a href={tutor.Linkedin} target="_blank" rel="noopener noreferrer">
                     <img
-                      src={tutor.Foto || '/logo192.png'}
+                      src={normalizeDrivePhotoUrlClient(tutor.Foto) || '/logo192.png'}
                       alt={tutor.Nombre}
+                      loading="lazy"
+                      decoding="async"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        // Ayuda a depurar URLs de fotos que no cargan desde Drive.
+                        const img = e.currentTarget;
+                        console.error(
+                          'Error cargando foto de tutor:',
+                          tutor.Nombre,
+                          tutor.Apellido,
+                          tutor.Foto,
+                          'src:',
+                          img?.src
+                        );
+
+                        // Si falló la URL thumbnail, probamos con uc?export=view.
+                        if (img?.src && img.src.includes('drive.google.com/thumbnail')) {
+                          const m = img.src.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+                          if (m?.[1]) {
+                            const fallback = `https://drive.google.com/uc?export=view&id=${m[1]}`;
+                            img.onerror = (e2) => {
+                              const img2 = e2.currentTarget;
+                              img2.onerror = null;
+                              img2.src = '/logo192.png';
+                            };
+                            img.src = fallback;
+                            return;
+                          }
+                        }
+
+                        img.onerror = null;
+                        img.src = '/logo192.png';
+                      }}
                       style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '2px solid #1976d2' }}
                     />
                   </a>
