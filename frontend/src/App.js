@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import './App.css';
+import { SettingsButton, PasswordModal, AdminPanel } from './AdminPanel';
 
 /** Sin REACT_APP_BACKEND_URL, usamos el backend directo (evita el proxy de CRA, que a veces devuelve index.html en /tutores). */
 function getApiBase() {
@@ -71,8 +72,14 @@ function App() {
   });
 
   const alumnoFormRef = useRef(null);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminPreview, setAdminPreview] = useState(null);
 
-  useEffect(() => {
+  const loadTutores = useCallback(() => {
+    setLoading(true);
+    setError('');
     const base = getApiBase();
     fetch(`${base}/tutores`)
       .then(async (res) => {
@@ -97,15 +104,16 @@ function App() {
         }
         setTutores(data);
         setLoading(false);
-        console.log('Tutores cargados:', data);
-        console.log('Valores únicos de Carrera:', [...new Set(data.map((t) => t.Carrera))]);
-        console.log('Valores únicos de Sexo:', [...new Set(data.map((t) => t.Sexo))]);
       })
       .catch((err) => {
         setError(err.message || 'No se pudo cargar la lista de tutores');
         setLoading(false);
       });
   }, []);
+
+  useEffect(() => {
+    loadTutores();
+  }, [loadTutores]);
 
   // Función para filtrar tutores
   const tutoresFiltrados = tutores.filter(tutor => {
@@ -184,11 +192,35 @@ function App() {
 
   return (
     <div className="main-layout">
+      <SettingsButton onClick={() => setShowPasswordModal(true)} />
+      {showPasswordModal && (
+        <PasswordModal
+          onClose={() => setShowPasswordModal(false)}
+          onSuccess={(password, preview) => {
+            setAdminPassword(password);
+            setAdminPreview(preview);
+            setShowPasswordModal(false);
+            setShowAdminPanel(true);
+          }}
+        />
+      )}
+      {showAdminPanel && (
+        <AdminPanel
+          password={adminPassword}
+          initialPreview={adminPreview}
+          onClose={() => {
+            setShowAdminPanel(false);
+            setAdminPassword('');
+            setAdminPreview(null);
+          }}
+          onTutoresUpdated={loadTutores}
+        />
+      )}
       <div className="tutores-list">
         <div style={{ textAlign: 'center', marginBottom: 30 }}>
           <img 
-            src="/logoFIhorizontal.png" 
-            alt="Logo Facultad de Ingeniería - Universidad Austral"
+            src="/logoGraduados.png" 
+            alt="Departamento de Graduados - Facultad de Ingeniería Austral"
             style={{ 
               maxWidth: '300px', 
               height: 'auto',
