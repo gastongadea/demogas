@@ -4,6 +4,8 @@ const cors = require('cors');
 const nodemailer = require('nodemailer');
 const { syncTutoresFromSheet, previewNewTutoresFromSheet, importNewTutoresFromSheet } = require('./lib/tutoresSync');
 const { getTutoresDisponibles, seleccionarTutor } = require('./lib/tutoresDb');
+const { getCarreras } = require('./lib/carrerasDb');
+const { syncCarrerasFromSheet } = require('./lib/carrerasSync');
 const { requireAdminPassword } = require('./lib/adminAuth');
 const { appendSeleccionToSheet } = require('./lib/sheets');
 
@@ -73,6 +75,7 @@ app.get('/', (req, res) => {
   <p>Backend en marcha. Este servidor no sirve una página en <code>/</code>; usá los endpoints:</p>
   <ul>
     <li><a href="/tutores"><code>GET /tutores</code></a> — lista de mentores (JSON, desde Neon)</li>
+    <li><a href="/carreras"><code>GET /carreras</code></a> — listas de carreras (mentor / alumno)</li>
     <li><code>POST /seleccionar-tutor</code> — cuerpo JSON (desde el front)</li>
     <li><code>POST /admin/sync-tutores</code> — sincroniza tutores desde Google Sheets (requiere token)</li>
   </ul>
@@ -84,11 +87,21 @@ app.get('/tutores', async (req, res) => {
   try {
     console.log('Solicitud GET /tutores recibida');
     const tutores = await getTutoresDisponibles();
-    console.log('Tutores con cupo disponible:', tutores.length);
+    console.log('Tutores activos:', tutores.length);
     res.json(tutores);
   } catch (err) {
     console.error('Error en /tutores:', err);
     res.status(500).json({ error: 'Error al obtener tutores', details: err.message });
+  }
+});
+
+app.get('/carreras', async (req, res) => {
+  try {
+    const carreras = await getCarreras();
+    res.json(carreras);
+  } catch (err) {
+    console.error('Error en /carreras:', err);
+    res.status(500).json({ error: 'Error al obtener carreras', details: err.message });
   }
 });
 
@@ -104,7 +117,8 @@ app.post('/admin/sync-tutores', async (req, res) => {
     const overwriteAsesorados = req.body?.overwriteAsesorados === true;
     const deactivateMissing = req.body?.deactivateMissing !== false;
     const stats = await syncTutoresFromSheet({ overwriteAsesorados, deactivateMissing });
-    res.json({ ok: true, ...stats });
+    const carreras = await syncCarrerasFromSheet();
+    res.json({ ok: true, ...stats, carreras });
   } catch (err) {
     console.error('Error en /admin/sync-tutores:', err);
     res.status(500).json({ error: 'Error al sincronizar tutores', details: err.message });
@@ -116,8 +130,9 @@ app.get('/admin/new-tutores', async (req, res) => {
   if (!requireAdminPassword(req, res)) return;
 
   try {
+    const carreras = await syncCarrerasFromSheet();
     const preview = await previewNewTutoresFromSheet();
-    res.json({ ok: true, ...preview });
+    res.json({ ok: true, ...preview, carreras });
   } catch (err) {
     console.error('Error en /admin/new-tutores:', err);
     res.status(500).json({ error: 'Error al leer la planilla', details: err.message });
@@ -130,7 +145,8 @@ app.post('/admin/import-new-tutores', async (req, res) => {
 
   try {
     const stats = await importNewTutoresFromSheet();
-    res.json({ ok: true, ...stats });
+    const carreras = await syncCarrerasFromSheet();
+    res.json({ ok: true, ...stats, carreras });
   } catch (err) {
     console.error('Error en /admin/import-new-tutores:', err);
     res.status(500).json({ error: 'Error al importar tutores', details: err.message });
@@ -187,6 +203,21 @@ app.post('/seleccionar-tutor', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Servidor escuchando en puerto ${PORT}`);
+
+async function bootstrapCarreras() {
+  try {
+    const carreras = await getCarreras();
+    if (carreras.mentores.length === 0 && carreras.alumnos.length === 0) {
+      console.log('Tabla carreras vacía; sincronizando desde Google Sheets...');
+      await syncCarrerasFromSheet();
+    }
+  } catch (err) {
+    console.warn('No se pudieron inicializar carreras:', err.message);
+  }
+}
+
+bootstrapCarreras().finally(() => {
+  app.listen(PORT, () => {
+    console.log(`Servidor escuchando en puerto ${PORT}`);
+  });
 });

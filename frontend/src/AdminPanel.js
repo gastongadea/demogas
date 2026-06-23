@@ -82,12 +82,13 @@ export function AdminPanel({ password, initialPreview, onClose, onTutoresUpdated
         return;
       }
       setPreview(data);
+      if (onTutoresUpdated) onTutoresUpdated();
     } catch {
       setError('Error de conexión con el servidor.');
     } finally {
       setLoadingPreview(false);
     }
-  }, [password]);
+  }, [password, onTutoresUpdated]);
 
   useEffect(() => {
     if (!initialPreview) {
@@ -119,9 +120,7 @@ export function AdminPanel({ password, initialPreview, onClose, onTutoresUpdated
           : 'No había tutores nuevos para importar.'
       );
       await loadPreview();
-      if (data.inserted > 0 && onTutoresUpdated) {
-        onTutoresUpdated();
-      }
+      if (onTutoresUpdated) onTutoresUpdated();
     } catch {
       setError('Error de conexión con el servidor.');
     } finally {
@@ -143,6 +142,7 @@ export function AdminPanel({ password, initialPreview, onClose, onTutoresUpdated
           <h3>Importar tutores desde Google Sheets</h3>
           <p className="admin-muted">
             Lee la hoja <strong>Graduados</strong> y detecta filas que aún no están en la base de datos.
+            También actualiza las listas de carreras desde la hoja <strong>Carreras</strong>.
           </p>
 
           {loadingPreview && <p>Cargando planilla...</p>}

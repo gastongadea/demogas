@@ -39,15 +39,10 @@ function normalizeDrivePhotoUrlClient(raw) {
   return s;
 }
 
-const CARRERAS = [
-  'Ing. Industrial',
-  'Ing. Informática',
-  'Ing. Biomédica',
-  'Lic. Ciencias de Datos',
-];
-
 function App() {
   const [tutores, setTutores] = useState([]);
+  const [carrerasMentor, setCarrerasMentor] = useState([]);
+  const [carrerasAlumno, setCarrerasAlumno] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [seleccion, setSeleccion] = useState(null);
@@ -111,9 +106,46 @@ function App() {
       });
   }, []);
 
-  useEffect(() => {
+  const loadCarreras = useCallback(() => {
+    const base = getApiBase();
+    fetch(`${base}/carreras`)
+      .then(async (res) => {
+        const text = await res.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          console.warn('No se pudieron cargar carreras: respuesta no JSON. ¿Reiniciaste el backend?');
+          return;
+        }
+        if (!res.ok) {
+          console.warn('No se pudieron cargar carreras:', data.error || res.status);
+          return;
+        }
+        if (Array.isArray(data.mentores)) {
+          setCarrerasMentor(data.mentores.length > 0 ? data.mentores : []);
+        }
+        if (Array.isArray(data.alumnos)) {
+          setCarrerasAlumno(data.alumnos.length > 0 ? data.alumnos : []);
+        }
+      })
+      .catch((err) => {
+        console.warn('No se pudieron cargar carreras:', err.message);
+      });
+  }, []);
+
+  const refreshAppData = useCallback(() => {
     loadTutores();
-  }, [loadTutores]);
+    loadCarreras();
+  }, [loadTutores, loadCarreras]);
+
+  useEffect(() => {
+    refreshAppData();
+  }, [refreshAppData]);
+
+function tutorSinCupo(tutor) {
+  return (tutor['Cupo disponible'] ?? 0) <= 0;
+}
 
   // Función para filtrar tutores
   const tutoresFiltrados = tutores.filter(tutor => {
@@ -125,6 +157,7 @@ function App() {
   });
 
   const handleSelectTutor = (tutor) => {
+    if (tutorSinCupo(tutor)) return;
     if (seleccion && seleccion.Nombre === tutor.Nombre && seleccion.Apellido === tutor.Apellido) {
       setSeleccion(null);
     } else {
@@ -212,8 +245,9 @@ function App() {
             setShowAdminPanel(false);
             setAdminPassword('');
             setAdminPreview(null);
+            refreshAppData();
           }}
-          onTutoresUpdated={loadTutores}
+          onTutoresUpdated={refreshAppData}
         />
       )}
       <div className="tutores-list">
@@ -249,7 +283,7 @@ function App() {
                 <label>Carrera:<br/>
                   <select name="carrera" value={filtros.carrera} onChange={handleFiltroChange}>
                     <option value="">Todas</option>
-                    {CARRERAS.map(c => <option key={c} value={c}>{c}</option>)}
+                    {carrerasMentor.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </label>
               </div>
@@ -295,10 +329,13 @@ function App() {
             {/* Lista de tutores */}
             <div className="tutores-grid">
               {tutoresFiltrados.length === 0 && <p style={{gridColumn: '1 / -1'}}>No hay tutores que coincidan con los filtros.</p>}
-              {tutoresFiltrados.map((tutor, idx) => (
+              {tutoresFiltrados.map((tutor, idx) => {
+                const sinCupo = tutorSinCupo(tutor);
+                const seleccionado = seleccion && seleccion.Nombre === tutor.Nombre && seleccion.Apellido === tutor.Apellido;
+                return (
                 <div
                   key={idx}
-                  className={`tutor-card${seleccion && seleccion.Nombre === tutor.Nombre && seleccion.Apellido === tutor.Apellido ? ' seleccionado' : ''}`}
+                  className={`tutor-card${seleccionado ? ' seleccionado' : ''}${sinCupo ? ' tutor-card--agotado' : ''}`}
                   onClick={() => handleSelectTutor(tutor)}
                   style={{
                     display: 'flex',
@@ -309,11 +346,16 @@ function App() {
                     borderRadius: 8,
                     marginBottom: 0,
                     padding: 12,
-                    cursor: 'pointer',
-                    boxShadow: seleccion && seleccion.Nombre === tutor.Nombre && seleccion.Apellido === tutor.Apellido ? '0 0 0 2px #1976d2' : 'none',
+                    cursor: sinCupo ? 'default' : 'pointer',
+                    boxShadow: seleccionado ? '0 0 0 2px #1976d2' : 'none',
                   }}
                 >
-                  <a href={tutor.Linkedin} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={tutor.Linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <img
                       src={normalizeDrivePhotoUrlClient(tutor.Foto) || '/logo192.png'}
                       alt={tutor.Nombre}
@@ -355,6 +397,7 @@ function App() {
                   </a>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 'bold', fontSize: 18 }}>{tutor.Nombre} {tutor.Apellido}</div>
+                    {sinCupo && <div className="tutor-cupo-agotado">Cupo agotado</div>}
                     <div style={{ color: '#555' }}>{tutor.Carrera}</div>
                     <div style={{ color: '#888', fontSize: 13 }}>Graduación: {tutor.Graduación}</div>
                     {tutor.Cargo && <div style={{ color: '#888', fontSize: 13 }}>Cargo: {tutor.Cargo}</div>}
@@ -362,7 +405,8 @@ function App() {
                     {tutor.Lugar && <div style={{ color: '#888', fontSize: 13 }}>Lugar: {tutor.Lugar}</div>}
                   </div>
                 </div>
-              ))}
+              );
+              })}
             </div>
           </>
         )}
@@ -375,7 +419,7 @@ function App() {
           <input name="anioCarrera" value={form.anioCarrera} onChange={handleChange} placeholder="Año de la carrera" type="number" min="1" max="7" />
           <select name="carrera" value={form.carrera} onChange={handleChange}>
             <option value="">Seleccioná tu carrera</option>
-            {CARRERAS.map(c => <option key={c} value={c}>{c}</option>)}
+            {carrerasAlumno.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
           <input name="correo" value={form.correo} onChange={handleChange} placeholder="Correo electrónico" type="email" />
           <input name="celular" value={form.celular} onChange={handleChange} placeholder="Celular" />

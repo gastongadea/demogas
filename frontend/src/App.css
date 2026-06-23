@@ -72,6 +72,29 @@
   background: #e3f2fd !important;
 }
 
+.tutor-card--agotado {
+  opacity: 0.55;
+  background: #f5f5f5 !important;
+  border-color: #e8e8e8 !important;
+}
+
+.tutor-card--agotado .tutor-cupo-agotado {
+  display: inline-block;
+  margin: 4px 0 6px;
+  padding: 2px 10px;
+  border-radius: 12px;
+  background: #e0e0e0;
+  color: #757575;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.tutor-card--agotado img {
+  border-color: #bdbdbd !important;
+  filter: grayscale(30%);
+}
+
 /* Ajustes para inputs y formularios */
 .alumno-form input,
 .alumno-form select {
