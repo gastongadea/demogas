@@ -2,14 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import './App.css';
 import { SettingsButton, PasswordModal, AdminPanel } from './AdminPanel';
 
-/** Sin REACT_APP_BACKEND_URL, usamos el backend directo (evita el proxy de CRA, que a veces devuelve index.html en /tutores). */
-function getApiBase() {
-  const fromEnv = process.env.REACT_APP_BACKEND_URL;
-  if (fromEnv) return fromEnv.replace(/\/$/, '');
-  return 'http://localhost:3001';
-}
-
-/**
+import { apiUrl } from './getApiBase';
  * Drive links que llegan desde el backend (o pegados en la planilla) a un formato
  * que suele funcionar mejor para `<img>`.
  */
@@ -75,8 +68,7 @@ function App() {
   const loadTutores = useCallback(() => {
     setLoading(true);
     setError('');
-    const base = getApiBase();
-    fetch(`${base}/tutores`)
+    fetch(apiUrl('/tutores'))
       .then(async (res) => {
         const text = await res.text();
         let data;
@@ -105,7 +97,7 @@ function App() {
           err.message === 'Failed to fetch' ||
           err.name === 'TypeError';
         const msg = isNetworkError
-          ? 'No se pudo conectar con el backend. En producción, el API tiene que estar desplegado (por ejemplo en Vercel) y el frontend debe apuntar a esa URL con REACT_APP_BACKEND_URL.'
+          ? 'No se pudo conectar con el backend. Verificá que el deploy en Vercel incluya la API y que DATABASE_URL esté configurado.'
           : (err.message || 'No se pudo cargar la lista de tutores');
         setError(msg);
         setLoading(false);
@@ -113,8 +105,7 @@ function App() {
   }, []);
 
   const loadCarreras = useCallback(() => {
-    const base = getApiBase();
-    fetch(`${base}/carreras`)
+    fetch(apiUrl('/carreras'))
       .then(async (res) => {
         const text = await res.text();
         let data;
@@ -203,8 +194,7 @@ function tutorSinCupo(tutor) {
       }
     }
     try {
-      const base = getApiBase();
-      const res = await fetch(`${base}/seleccionar-tutor`, {
+      const res = await fetch(apiUrl('/seleccionar-tutor'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

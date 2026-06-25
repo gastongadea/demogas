@@ -1,11 +1,17 @@
 {
-  "buildCommand": "cd frontend && npm install && npm run build",
+  "installCommand": "npm install && cd frontend && npm install",
+  "buildCommand": "cd frontend && npm run build",
   "outputDirectory": "frontend/build",
   "framework": "create-react-app",
+  "functions": {
+    "api/[...path].js": {
+      "includeFiles": "lib/**,db/**,migrations/**,app.js"
+    }
+  },
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!api/)(?!.*\\..*).*)",
       "destination": "/index.html"
     }
   ]
-} 
+}

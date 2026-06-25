@@ -1,10 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-
-function getApiBase() {
-  const fromEnv = process.env.REACT_APP_BACKEND_URL;
-  if (fromEnv) return fromEnv.replace(/\/$/, '');
-  return 'http://localhost:3001';
-}
+import { apiUrl } from './getApiBase';
 
 export function PasswordModal({ onClose, onSuccess }) {
   const [password, setPassword] = useState('');
@@ -16,8 +11,7 @@ export function PasswordModal({ onClose, onSuccess }) {
     setError('');
     setLoading(true);
     try {
-      const base = getApiBase();
-      const res = await fetch(`${base}/admin/new-tutores`, {
+      const res = await fetch(apiUrl('/admin/new-tutores'), {
         headers: { 'x-admin-password': password },
       });
       const data = await res.json();
@@ -72,8 +66,7 @@ export function AdminPanel({ password, initialPreview, onClose, onTutoresUpdated
     setLoadingPreview(true);
     setError('');
     try {
-      const base = getApiBase();
-      const res = await fetch(`${base}/admin/new-tutores`, {
+      const res = await fetch(apiUrl('/admin/new-tutores'), {
         headers: { 'x-admin-password': password },
       });
       const data = await res.json();
@@ -101,8 +94,7 @@ export function AdminPanel({ password, initialPreview, onClose, onTutoresUpdated
     setMessage('');
     setError('');
     try {
-      const base = getApiBase();
-      const res = await fetch(`${base}/admin/import-new-tutores`, {
+      const res = await fetch(apiUrl('/admin/import-new-tutores'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
