@@ -101,7 +101,13 @@ function App() {
         setLoading(false);
       })
       .catch((err) => {
-        setError(err.message || 'No se pudo cargar la lista de tutores');
+        const isNetworkError =
+          err.message === 'Failed to fetch' ||
+          err.name === 'TypeError';
+        const msg = isNetworkError
+          ? 'No se pudo conectar con el backend. En producción, el API tiene que estar desplegado (por ejemplo en Vercel) y el frontend debe apuntar a esa URL con REACT_APP_BACKEND_URL.'
+          : (err.message || 'No se pudo cargar la lista de tutores');
+        setError(msg);
         setLoading(false);
       });
   }, []);
