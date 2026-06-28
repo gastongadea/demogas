@@ -12,7 +12,7 @@ export function PasswordModal({ onClose, onSuccess }) {
     setError('');
     setLoading(true);
     try {
-      const res = await fetch(apiUrl('/admin/new-tutores'), {
+      const res = await fetch(apiUrl('/admin-new-tutores'), {
         headers: { 'x-admin-password': password },
       });
       const { data, ok } = await parseApiResponse(res);
@@ -67,7 +67,7 @@ export function AdminPanel({ password, initialPreview, onClose, onTutoresUpdated
     setLoadingPreview(true);
     setError('');
     try {
-      const res = await fetch(apiUrl('/admin/new-tutores'), {
+      const res = await fetch(apiUrl('/admin-new-tutores'), {
         headers: { 'x-admin-password': password },
       });
       const { data, ok } = await parseApiResponse(res);
@@ -95,7 +95,7 @@ export function AdminPanel({ password, initialPreview, onClose, onTutoresUpdated
     setMessage('');
     setError('');
     try {
-      const res = await fetch(apiUrl('/admin/import-new-tutores'), {
+      const res = await fetch(apiUrl('/admin-import-new-tutores'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

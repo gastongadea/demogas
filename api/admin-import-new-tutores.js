@@ -1,6 +1,6 @@
-const { requireAdminPassword } = require('../../lib/adminAuth');
-const { syncCarrerasFromSheet } = require('../../lib/carrerasSync');
-const { importNewTutoresFromSheet } = require('../../lib/tutoresSync');
+const { requireAdminPassword } = require('../lib/adminAuth');
+const { syncCarrerasFromSheet } = require('../lib/carrerasSync');
+const { importNewTutoresFromSheet } = require('../lib/tutoresSync');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
@@ -13,7 +13,7 @@ module.exports = async (req, res) => {
     const carreras = await syncCarrerasFromSheet();
     res.json({ ok: true, ...stats, carreras });
   } catch (err) {
-    console.error('Error en /api/admin/import-new-tutores:', err);
+    console.error('Error en /api/admin-import-new-tutores:', err);
     res.status(500).json({ error: 'Error al importar tutores', details: err.message });
   }
 };

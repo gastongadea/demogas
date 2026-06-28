@@ -119,7 +119,7 @@ api.post('/admin/sync-tutores', async (req, res) => {
   }
 });
 
-api.get('/admin/new-tutores', async (req, res) => {
+api.get('/admin-new-tutores', async (req, res) => {
   if (!requireAdminPassword(req, res)) return;
 
   try {
@@ -127,12 +127,12 @@ api.get('/admin/new-tutores', async (req, res) => {
     const preview = await previewNewTutoresFromSheet();
     res.json({ ok: true, ...preview, carreras });
   } catch (err) {
-    console.error('Error en /admin/new-tutores:', err);
+    console.error('Error en /admin-new-tutores:', err);
     res.status(500).json({ error: 'Error al leer la planilla', details: err.message });
   }
 });
 
-api.post('/admin/import-new-tutores', async (req, res) => {
+api.post('/admin-import-new-tutores', async (req, res) => {
   if (!requireAdminPassword(req, res)) return;
 
   try {
@@ -140,7 +140,7 @@ api.post('/admin/import-new-tutores', async (req, res) => {
     const carreras = await syncCarrerasFromSheet();
     res.json({ ok: true, ...stats, carreras });
   } catch (err) {
-    console.error('Error en /admin/import-new-tutores:', err);
+    console.error('Error en /admin-import-new-tutores:', err);
     res.status(500).json({ error: 'Error al importar tutores', details: err.message });
   }
 });

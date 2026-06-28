@@ -3,7 +3,7 @@
   "buildCommand": "cd frontend && npm run build",
   "outputDirectory": "frontend/build",
   "functions": {
-    "api/admin/**": {
+    "api/admin-*.js": {
       "maxDuration": 60,
       "includeFiles": "lib/**,db/**,migrations/**,app.js"
     },
