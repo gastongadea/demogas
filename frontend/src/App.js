@@ -3,6 +3,8 @@ import './App.css';
 import { SettingsButton, PasswordModal, AdminPanel } from './AdminPanel';
 
 import { apiUrl } from './getApiBase';
+
+/**
  * Drive links que llegan desde el backend (o pegados en la planilla) a un formato
  * que suele funcionar mejor para `<img>`.
  */
