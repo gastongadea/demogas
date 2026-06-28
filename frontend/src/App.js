@@ -3,6 +3,7 @@ import './App.css';
 import { SettingsButton, PasswordModal, AdminPanel } from './AdminPanel';
 
 import { apiUrl } from './getApiBase';
+import { isCorreoInstitucional } from './correoInstitucional';
 
 /**
  * Drive links que llegan desde el backend (o pegados en la planilla) a un formato
@@ -202,6 +203,10 @@ function tutorSinCupo(tutor) {
         setMensaje('Por favor, completa todos los campos.');
         return;
       }
+    }
+    if (!isCorreoInstitucional(form.correo)) {
+      setMensaje('El correo debe ser institucional (@austral.edu.ar o subdominio, ej. @ing.austral.edu.ar).');
+      return;
     }
     try {
       const res = await fetch(apiUrl('/seleccionar-tutor'), {
@@ -427,7 +432,7 @@ function tutorSinCupo(tutor) {
             <option value="">Seleccioná tu carrera</option>
             {carrerasAlumno.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
-          <input name="correo" value={form.correo} onChange={handleChange} placeholder="Correo electrónico" type="email" />
+          <input name="correo" value={form.correo} onChange={handleChange} placeholder="Correo electrónico institucional" type="email" />
           <input name="celular" value={form.celular} onChange={handleChange} placeholder="Celular" />
           <input name="linkedin" value={form.linkedin} onChange={handleChange} placeholder="LinkedIn (opcional)" />
           <select name="sexo" value={form.sexo} onChange={handleChange}>

@@ -8,6 +8,7 @@ const { getCarreras } = require('./lib/carrerasDb');
 const { syncCarrerasFromSheet } = require('./lib/carrerasSync');
 const { requireAdminPassword } = require('./lib/adminAuth');
 const { appendSeleccionToSheet } = require('./lib/sheets');
+const { isCorreoInstitucional } = require('./lib/correoInstitucional');
 
 const app = express();
 app.use(cors());
@@ -148,6 +149,11 @@ api.post('/seleccionar-tutor', async (req, res) => {
   const { tutor, alumno } = req.body;
   if (!tutor || !alumno) {
     return res.status(400).json({ error: 'Faltan datos de tutor o alumno' });
+  }
+  if (!isCorreoInstitucional(alumno.correo)) {
+    return res.status(400).json({
+      error: 'El correo debe ser institucional (@austral.edu.ar o subdominio, ej. @ing.austral.edu.ar).',
+    });
   }
 
   try {
