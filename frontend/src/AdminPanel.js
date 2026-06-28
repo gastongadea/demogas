@@ -60,8 +60,16 @@ export function AdminPanel({ password, initialPreview, onClose, onTutoresUpdated
   const [preview, setPreview] = useState(initialPreview);
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [liberatingAll, setLiberatingAll] = useState(false);
+  const [liberatingId, setLiberatingId] = useState(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
+  const adminHeaders = (extra = {}) => ({
+    'Content-Type': 'application/json',
+    'x-admin-password': password,
+    ...extra,
+  });
 
   const loadPreview = useCallback(async () => {
     setLoadingPreview(true);
@@ -97,10 +105,7 @@ export function AdminPanel({ password, initialPreview, onClose, onTutoresUpdated
     try {
       const res = await fetch(apiUrl('/admin-import-new-tutores'), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-password': password,
-        },
+        headers: adminHeaders(),
       });
       const { data, ok } = await parseApiResponse(res);
       if (!ok) {
@@ -121,9 +126,73 @@ export function AdminPanel({ password, initialPreview, onClose, onTutoresUpdated
     }
   };
 
+  const handleLiberar = async (tutorId) => {
+    setLiberatingId(tutorId);
+    setMessage('');
+    setError('');
+    try {
+      const res = await fetch(apiUrl('/admin-liberar-cupo'), {
+        method: 'POST',
+        headers: adminHeaders(),
+        body: JSON.stringify({ id: tutorId }),
+      });
+      const { data, ok } = await parseApiResponse(res);
+      if (!ok) {
+        setError(apiErrorMessage(data, 'Error al liberar cupo'));
+        return;
+      }
+      setPreview((prev) => ({
+        ...prev,
+        tutoresConAsignados: data.tutoresConAsignados || [],
+      }));
+      setMessage('Se liberó 1 cupo.');
+      if (onTutoresUpdated) onTutoresUpdated();
+    } catch (err) {
+      setError(err.message || 'Error de conexión con el servidor.');
+    } finally {
+      setLiberatingId(null);
+    }
+  };
+
+  const handleLiberarTodos = async () => {
+    if (!window.confirm('¿Resetear a 0 la cantidad asignada de todos los mentores?')) return;
+
+    setLiberatingAll(true);
+    setMessage('');
+    setError('');
+    try {
+      const res = await fetch(apiUrl('/admin-liberar-todos'), {
+        method: 'POST',
+        headers: adminHeaders(),
+      });
+      const { data, ok } = await parseApiResponse(res);
+      if (!ok) {
+        setError(apiErrorMessage(data, 'Error al liberar cupos'));
+        return;
+      }
+      setPreview((prev) => ({
+        ...prev,
+        tutoresConAsignados: data.tutoresConAsignados || [],
+      }));
+      setMessage(
+        data.resetCount > 0
+          ? `Se liberaron cupos de ${data.resetCount} mentor(es).`
+          : 'No había asignaciones para liberar.'
+      );
+      if (onTutoresUpdated) onTutoresUpdated();
+    } catch (err) {
+      setError(err.message || 'Error de conexión con el servidor.');
+    } finally {
+      setLiberatingAll(false);
+    }
+  };
+
+  const tutoresConAsignados = preview?.tutoresConAsignados || [];
+  const busy = loadingPreview || importing || liberatingAll || liberatingId !== null;
+
   return (
     <div className="admin-overlay" onClick={onClose}>
-      <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="admin-modal admin-modal--wide" onClick={(e) => e.stopPropagation()}>
         <div className="admin-modal-header">
           <h2>Panel de administración</h2>
           <button type="button" className="admin-close" onClick={onClose} aria-label="Cerrar">
@@ -134,8 +203,8 @@ export function AdminPanel({ password, initialPreview, onClose, onTutoresUpdated
         <section className="admin-section">
           <h3>Importar tutores desde Google Sheets</h3>
           <p className="admin-muted">
-            Lee la hoja <strong>Graduados</strong> y detecta filas que aún no están en la base de datos.
-            También actualiza las listas de carreras desde la hoja <strong>Carreras</strong>.
+            Lee la hoja <strong>Graduados</strong> y detecta filas nuevas.
+            <strong> Actualizar lista</strong> también sincroniza cupos y carreras desde la planilla.
           </p>
 
           {loadingPreview && <p>Cargando planilla...</p>}
@@ -145,6 +214,9 @@ export function AdminPanel({ password, initialPreview, onClose, onTutoresUpdated
               <span>{preview.sheetRows} filas en planilla</span>
               <span>{preview.newCount} nuevos</span>
               <span>{preview.inSheet - preview.newCount} ya en BD</span>
+              {preview.cuposUpdated > 0 && (
+                <span>{preview.cuposUpdated} cupo(s) actualizado(s)</span>
+              )}
             </div>
           )}
 
@@ -163,15 +235,12 @@ export function AdminPanel({ password, initialPreview, onClose, onTutoresUpdated
             <p className="admin-muted">No hay tutores nuevos en la planilla.</p>
           )}
 
-          {message && <p className="admin-success">{message}</p>}
-          {error && <p className="admin-error">{error}</p>}
-
           <div className="admin-actions">
             <button
               type="button"
               className="admin-btn admin-btn--secondary"
               onClick={loadPreview}
-              disabled={loadingPreview || importing}
+              disabled={busy}
             >
               Actualizar lista
             </button>
@@ -179,12 +248,60 @@ export function AdminPanel({ password, initialPreview, onClose, onTutoresUpdated
               type="button"
               className="admin-btn admin-btn--primary"
               onClick={handleImport}
-              disabled={loadingPreview || importing || !preview?.newCount}
+              disabled={busy || !preview?.newCount}
             >
               {importing ? 'Importando...' : 'Importar nuevos a la BD'}
             </button>
+            <button
+              type="button"
+              className="admin-btn admin-btn--warning"
+              onClick={handleLiberarTodos}
+              disabled={busy}
+            >
+              {liberatingAll ? 'Liberando...' : 'Liberar todos'}
+            </button>
           </div>
         </section>
+
+        <section className="admin-section">
+          <h3>Liberar cupos</h3>
+          <p className="admin-muted">
+            Mentores con al menos un alumno asignado. <strong>Liberar</strong> resta 1 a la cantidad asignada.
+          </p>
+
+          {!loadingPreview && tutoresConAsignados.length === 0 && (
+            <p className="admin-muted">Ningún mentor tiene alumnos asignados.</p>
+          )}
+
+          {!loadingPreview && tutoresConAsignados.length > 0 && (
+            <div className="admin-cupos-table">
+              <div className="admin-cupos-header">
+                <span>Mentor</span>
+                <span>Cupo</span>
+                <span>Asignados</span>
+                <span />
+              </div>
+              {tutoresConAsignados.map((t) => (
+                <div className="admin-cupos-row" key={t.id}>
+                  <span className="admin-cupos-name">{t.apellido}, {t.nombre}</span>
+                  <span>{t.cupo}</span>
+                  <span>{t.asignados}</span>
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--secondary admin-btn--compact"
+                    onClick={() => handleLiberar(t.id)}
+                    disabled={busy}
+                  >
+                    {liberatingId === t.id ? '...' : 'Liberar'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {message && <p className="admin-success">{message}</p>}
+        {error && <p className="admin-error">{error}</p>}
       </div>
     </div>
   );

@@ -2,8 +2,10 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
-const { syncTutoresFromSheet, previewNewTutoresFromSheet, importNewTutoresFromSheet } = require('./lib/tutoresSync');
+const { syncTutoresFromSheet, importNewTutoresFromSheet } = require('./lib/tutoresSync');
 const { getTutoresDisponibles, seleccionarTutor } = require('./lib/tutoresDb');
+const { liberarCupo, liberarTodosCupos, getTutoresConAsignados } = require('./lib/tutoresAdmin');
+const { loadAdminPreview } = require('./lib/adminPreview');
 const { getCarreras } = require('./lib/carrerasDb');
 const { syncCarrerasFromSheet } = require('./lib/carrerasSync');
 const { requireAdminPassword } = require('./lib/adminAuth');
@@ -123,12 +125,45 @@ api.get('/admin-new-tutores', async (req, res) => {
   if (!requireAdminPassword(req, res)) return;
 
   try {
-    const carreras = await syncCarrerasFromSheet();
-    const preview = await previewNewTutoresFromSheet();
-    res.json({ ok: true, ...preview, carreras });
+    const data = await loadAdminPreview();
+    res.json(data);
   } catch (err) {
     console.error('Error en /admin-new-tutores:', err);
     res.status(500).json({ error: 'Error al leer la planilla', details: err.message });
+  }
+});
+
+api.post('/admin-liberar-cupo', async (req, res) => {
+  if (!requireAdminPassword(req, res)) return;
+
+  const tutorId = req.body?.id;
+  if (!tutorId) {
+    return res.status(400).json({ error: 'Falta el id del tutor' });
+  }
+
+  try {
+    const result = await liberarCupo(tutorId);
+    if (!result.ok) {
+      return res.status(400).json(result);
+    }
+    const tutoresConAsignados = await getTutoresConAsignados();
+    res.json({ ok: true, tutor: result.tutor, tutoresConAsignados });
+  } catch (err) {
+    console.error('Error en /admin-liberar-cupo:', err);
+    res.status(500).json({ error: 'Error al liberar cupo', details: err.message });
+  }
+});
+
+api.post('/admin-liberar-todos', async (req, res) => {
+  if (!requireAdminPassword(req, res)) return;
+
+  try {
+    const result = await liberarTodosCupos();
+    const tutoresConAsignados = await getTutoresConAsignados();
+    res.json({ ok: true, resetCount: result.resetCount, tutoresConAsignados });
+  } catch (err) {
+    console.error('Error en /admin-liberar-todos:', err);
+    res.status(500).json({ error: 'Error al liberar cupos', details: err.message });
   }
 });
 

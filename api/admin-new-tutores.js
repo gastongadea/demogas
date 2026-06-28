@@ -1,6 +1,5 @@
 const { requireAdminPassword } = require('../lib/adminAuth');
-const { syncCarrerasFromSheet } = require('../lib/carrerasSync');
-const { previewNewTutoresFromSheet } = require('../lib/tutoresSync');
+const { loadAdminPreview } = require('../lib/adminPreview');
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') {
@@ -9,9 +8,8 @@ module.exports = async (req, res) => {
   if (!requireAdminPassword(req, res)) return;
 
   try {
-    const carreras = await syncCarrerasFromSheet();
-    const preview = await previewNewTutoresFromSheet();
-    res.json({ ok: true, ...preview, carreras });
+    const data = await loadAdminPreview();
+    res.json(data);
   } catch (err) {
     console.error('Error en /api/admin-new-tutores:', err);
     res.status(500).json({ error: 'Error al leer la planilla', details: err.message });

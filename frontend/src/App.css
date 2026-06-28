@@ -224,6 +224,10 @@
   max-width: 380px;
 }
 
+.admin-modal--wide {
+  max-width: 640px;
+}
+
 .admin-modal-header {
   display: flex;
   align-items: center;
@@ -338,6 +342,53 @@
 .admin-btn--secondary {
   background: #f0f0f0;
   color: #333;
+}
+
+.admin-btn--warning {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.admin-btn--compact {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
+
+.admin-cupos-table {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.admin-cupos-header,
+.admin-cupos-row {
+  display: grid;
+  grid-template-columns: 1fr 64px 80px 88px;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 14px;
+}
+
+.admin-cupos-header {
+  background: #f5f5f5;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.admin-cupos-row {
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+}
+
+.admin-cupos-row:last-child {
+  border-bottom: none;
+}
+
+.admin-cupos-name {
+  font-weight: 500;
 }
 
 .admin-error {
