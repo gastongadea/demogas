@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { apiUrl } from './getApiBase';
+import { parseApiResponse, apiErrorMessage } from './apiResponse';
 
 export function PasswordModal({ onClose, onSuccess }) {
   const [password, setPassword] = useState('');
@@ -14,14 +15,14 @@ export function PasswordModal({ onClose, onSuccess }) {
       const res = await fetch(apiUrl('/admin/new-tutores'), {
         headers: { 'x-admin-password': password },
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || 'Contraseña incorrecta');
+      const { data, ok } = await parseApiResponse(res);
+      if (!ok) {
+        setError(apiErrorMessage(data, 'Contraseña incorrecta'));
         return;
       }
       onSuccess(password, data);
-    } catch {
-      setError('No se pudo conectar con el servidor.');
+    } catch (err) {
+      setError(err.message || 'No se pudo conectar con el servidor.');
     } finally {
       setLoading(false);
     }
@@ -69,15 +70,15 @@ export function AdminPanel({ password, initialPreview, onClose, onTutoresUpdated
       const res = await fetch(apiUrl('/admin/new-tutores'), {
         headers: { 'x-admin-password': password },
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || 'No se pudo leer la planilla');
+      const { data, ok } = await parseApiResponse(res);
+      if (!ok) {
+        setError(apiErrorMessage(data, 'No se pudo leer la planilla'));
         return;
       }
       setPreview(data);
       if (onTutoresUpdated) onTutoresUpdated();
-    } catch {
-      setError('Error de conexión con el servidor.');
+    } catch (err) {
+      setError(err.message || 'Error de conexión con el servidor.');
     } finally {
       setLoadingPreview(false);
     }
@@ -101,9 +102,9 @@ export function AdminPanel({ password, initialPreview, onClose, onTutoresUpdated
           'x-admin-password': password,
         },
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.details || data.error || 'Error al importar');
+      const { data, ok } = await parseApiResponse(res);
+      if (!ok) {
+        setError(apiErrorMessage(data, 'Error al importar'));
         return;
       }
       setMessage(
@@ -113,8 +114,8 @@ export function AdminPanel({ password, initialPreview, onClose, onTutoresUpdated
       );
       await loadPreview();
       if (onTutoresUpdated) onTutoresUpdated();
-    } catch {
-      setError('Error de conexión con el servidor.');
+    } catch (err) {
+      setError(err.message || 'Error de conexión con el servidor.');
     } finally {
       setImporting(false);
     }
