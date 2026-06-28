@@ -70,7 +70,10 @@ function App() {
   const loadTutores = useCallback(() => {
     setLoading(true);
     setError('');
-    fetch(apiUrl('/tutores'))
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+    fetch(apiUrl('/tutores'), { signal: controller.signal })
       .then(async (res) => {
         const text = await res.text();
         let data;
@@ -80,7 +83,7 @@ function App() {
           const looksLikeHtml = text.trimStart().startsWith('<');
           throw new Error(
             looksLikeHtml
-              ? 'La respuesta fue HTML (no JSON). Suele pasar si el front pide /tutores al dev server de React en lugar del backend. Usá el backend en http://localhost:3001 (ya configurado).'
+              ? 'La respuesta fue HTML (no JSON). La API no está respondiendo correctamente en producción.'
               : 'El servidor no devolvió JSON. ¿Está el backend corriendo? (npm start en la raíz del repo, puerto 3001).'
           );
         }
@@ -95,15 +98,20 @@ function App() {
         setLoading(false);
       })
       .catch((err) => {
+        const isAbort = err.name === 'AbortError';
         const isNetworkError =
+          isAbort ||
           err.message === 'Failed to fetch' ||
           err.name === 'TypeError';
-        const msg = isNetworkError
-          ? 'No se pudo conectar con el backend. Verificá que el deploy en Vercel incluya la API y que DATABASE_URL esté configurado.'
-          : (err.message || 'No se pudo cargar la lista de tutores');
+        const msg = isAbort
+          ? 'La API tardó demasiado en responder. Verificá DATABASE_URL en Vercel y que /api/tutores responda.'
+          : isNetworkError
+            ? 'No se pudo conectar con el backend. Verificá que el deploy en Vercel incluya la API y que DATABASE_URL esté configurado.'
+            : (err.message || 'No se pudo cargar la lista de tutores');
         setError(msg);
         setLoading(false);
-      });
+      })
+      .finally(() => clearTimeout(timeoutId));
   }, []);
 
   const loadCarreras = useCallback(() => {

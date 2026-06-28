@@ -202,15 +202,7 @@ async function bootstrapCarreras() {
   }
 }
 
-app.use(async (req, res, next) => {
-  try {
-    await bootstrapCarreras();
-  } catch (err) {
-    console.warn('Bootstrap carreras:', err.message);
-  }
-  next();
-});
-
 app.use('/api', api);
 
 module.exports = app;
+module.exports.bootstrapCarreras = bootstrapCarreras;
