@@ -2,6 +2,60 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { apiUrl } from './getApiBase';
 import { parseApiResponse, apiErrorMessage } from './apiResponse';
 
+const PLANILLA_ASIGNACION_URL =
+  process.env.REACT_APP_SPREADSHEET_URL ||
+  'https://docs.google.com/spreadsheets/d/1LREjud109bwtC3nOSM2lUpb6eWXoSqHrFL5YyHr4fec/edit';
+
+function AdminActionControl({ as: Tag = 'button', icon, lines, className = '', ...rest }) {
+  return (
+    <Tag className={`admin-btn admin-btn--icon ${className}`.trim()} {...rest}>
+      <span className="admin-btn__icon" aria-hidden="true">
+        {icon}
+      </span>
+      <span className="admin-btn__label">
+        {lines.map((line, i) => (
+          <span key={i}>{line}</span>
+        ))}
+      </span>
+    </Tag>
+  );
+}
+
+const IconRefresh = () => (
+  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+    <path d="M21 3v6h-6" />
+  </svg>
+);
+
+const IconImport = () => (
+  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+    <path d="M12 8v8" />
+    <path d="M8 12l4 4 4-4" />
+  </svg>
+);
+
+const IconLiberar = () => (
+  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 7h18v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
+    <path d="M3 7l2-4h14l2 4" />
+    <path d="M12 11v5" />
+    <path d="M9 14l3-3 3 3" />
+  </svg>
+);
+
+const IconSheets = () => (
+  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+    <rect x="3" y="2" width="18" height="20" rx="2" fill="#0F9D58" />
+    <rect x="6" y="6" width="5" height="4" fill="#fff" opacity="0.9" />
+    <rect x="13" y="6" width="5" height="4" fill="#fff" opacity="0.9" />
+    <rect x="6" y="12" width="5" height="4" fill="#fff" opacity="0.9" />
+    <rect x="13" y="12" width="5" height="4" fill="#fff" opacity="0.9" />
+    <rect x="6" y="18" width="12" height="1.5" fill="#fff" opacity="0.7" />
+  </svg>
+);
+
 export function PasswordModal({ onClose, onSuccess }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -155,7 +209,7 @@ export function AdminPanel({ password, initialPreview, onClose, onTutoresUpdated
   };
 
   const handleLiberarTodos = async () => {
-    if (!window.confirm('¿Resetear a 0 la cantidad asignada de todos los mentores?')) return;
+    if (!window.confirm('¿Reiniciamos todos los mentores?')) return;
 
     setLiberatingAll(true);
     setMessage('');
@@ -236,30 +290,39 @@ export function AdminPanel({ password, initialPreview, onClose, onTutoresUpdated
           )}
 
           <div className="admin-actions">
-            <button
+            <AdminActionControl
               type="button"
-              className="admin-btn admin-btn--secondary"
+              className="admin-btn--secondary"
+              icon={<IconRefresh />}
+              lines={loadingPreview ? ['Actualizando', 'lista'] : ['Actualizar', 'lista']}
               onClick={loadPreview}
               disabled={busy}
-            >
-              Actualizar lista
-            </button>
-            <button
+            />
+            <AdminActionControl
               type="button"
-              className="admin-btn admin-btn--primary"
+              className="admin-btn--primary"
+              icon={<IconImport />}
+              lines={importing ? ['Importando', '...'] : ['Importar nuevos', 'a la BD']}
               onClick={handleImport}
               disabled={busy || !preview?.newCount}
-            >
-              {importing ? 'Importando...' : 'Importar nuevos a la BD'}
-            </button>
-            <button
+            />
+            <AdminActionControl
               type="button"
-              className="admin-btn admin-btn--warning"
+              className="admin-btn--warning"
+              icon={<IconLiberar />}
+              lines={liberatingAll ? ['Liberando', '...'] : ['Liberar', 'todos']}
               onClick={handleLiberarTodos}
               disabled={busy}
-            >
-              {liberatingAll ? 'Liberando...' : 'Liberar todos'}
-            </button>
+            />
+            <AdminActionControl
+              as="a"
+              href={PLANILLA_ASIGNACION_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="admin-btn--secondary"
+              icon={<IconSheets />}
+              lines={['Abrir', 'planilla']}
+            />
           </div>
         </section>
 
@@ -286,14 +349,14 @@ export function AdminPanel({ password, initialPreview, onClose, onTutoresUpdated
                   <span className="admin-cupos-name">{t.apellido}, {t.nombre}</span>
                   <span>{t.cupo}</span>
                   <span>{t.asignados}</span>
-                  <button
+                  <AdminActionControl
                     type="button"
-                    className="admin-btn admin-btn--secondary admin-btn--compact"
+                    className="admin-btn--secondary admin-btn--compact"
+                    icon={<IconLiberar />}
+                    lines={liberatingId === t.id ? ['...'] : ['Liberar']}
                     onClick={() => handleLiberar(t.id)}
                     disabled={busy}
-                  >
-                    {liberatingId === t.id ? '...' : 'Liberar'}
-                  </button>
+                  />
                 </div>
               ))}
             </div>
